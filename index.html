@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI Personality Test Interaktif</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338ca;
+            --bg: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --success: #10B981;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; padding: 20px; }
+        
+        .container {
+            max-width: 800px; margin: 0 auto; background: var(--card-bg);
+            border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px; min-height: 80vh;
+        }
+
+        h1, h2, h3 { color: var(--text-main); margin-bottom: 15px; }
+        p { margin-bottom: 15px; color: var(--text-muted); }
+
+        .btn {
+            background: var(--primary); color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600;
+            transition: background 0.2s; display: inline-block;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        .btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-outline:hover { background: var(--bg); }
+
+        /* Progress Bar */
+        .progress-header { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .progress-bar { width: 100%; background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+        .progress-stats { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; color: var(--text-muted); font-weight: 500;}
+
+        /* Questions */
+        .question-card { margin-bottom: 30px; }
+        .question-text { font-size: 18px; font-weight: 500; margin-bottom: 15px; color: var(--text-main); }
+        .options-grid { display: flex; flex-direction: column; gap: 8px; }
+        
+        .option-label {
+            display: flex; align-items: center; padding: 12px 16px; border: 2px solid var(--border);
+            border-radius: 8px; cursor: pointer; transition: all 0.2s; background: var(--card-bg);
+        }
+        .option-label:hover { border-color: var(--primary); background: #EEF2FF; }
+        .option-label input { display: none; }
+        .option-label.selected { border-color: var(--primary); background: #EEF2FF; font-weight: 600; }
+        
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
+
+        /* Results */
+        .result-section { margin-bottom: 40px; padding: 20px; background: var(--bg); border-radius: var(--radius); }
+        .type-title { font-size: 48px; color: var(--primary); text-align: center; font-weight: 800; margin-bottom: 5px; }
+        .type-subtitle { font-size: 20px; text-align: center; margin-bottom: 20px; font-weight: 600; }
+        
+        .chart-row { margin-bottom: 20px; }
+        .chart-labels { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+        .chart-bar-bg { width: 100%; height: 24px; background: var(--border); border-radius: 12px; display: flex; overflow: hidden; }
+        .chart-bar-left { height: 100%; background: var(--primary); display: flex; align-items: center; padding-left: 10px; color: white; font-size: 12px;}
+        .chart-bar-right { height: 100%; background: #10B981; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: white; font-size: 12px;}
+        
+        ul, ol { margin-left: 20px; margin-bottom: 15px; color: var(--text-muted); }
+        li { margin-bottom: 5px; }
+        
+        .hidden { display: none; }
+
+        @media (min-width: 600px) {
+            .options-grid { flex-direction: row; justify-content: space-between; }
+            .option-label { flex: 1; justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Screen 1: Intro -->
+    <div id="intro-screen">
+        <h1 style="text-align: center; font-size: 32px; color: var(--primary);">MBTI PERSONALITY TEST</h1>
+        <p style="text-align: center; font-size: 18px; margin-bottom: 30px;">Kenali cara Anda berpikir, mengambil keputusan, berinteraksi, dan menjalani kehidupan.</p>
+        
+        <div class="result-section">
+            <h3>Petunjuk Pengisian:</h3>
+            <ul>
+                <li>Tes ini terdiri dari <strong>20 putaran</strong> (Total 100 pertanyaan).</li>
+                <li>Pilih jawaban yang paling mencerminkan <strong>diri Anda yang sebenarnya</strong>, bukan apa yang Anda anggap ideal.</li>
+                <li>Tidak ada jawaban benar atau salah. Jawablah berdasarkan kecenderungan alami Anda dalam kehidupan sehari-hari.</li>
+                <li>Pastikan Anda menjawab semua pertanyaan di setiap putaran untuk dapat melanjutkan.</li>
+            </ul>
+        </div>
+        <div style="text-align: center;">
+            <button class="btn" style="font-size: 18px; padding: 15px 40px;" onclick="startTest()">Mulai Tes Sekarang</button>
+        </div>
+    </div>
+
+    <!-- Screen 2: Quiz -->
+    <div id="quiz-screen" class="hidden">
+        <div class="progress-header">
+            <h2>MBTI PERSONALITY TEST</h2>
+            <div class="progress-stats">
+                <span id="round-info">Putaran 1 dari 20</span>
+                <span id="question-info">Pertanyaan 1 sampai 5 dari 100</span>
+                <span id="progress-percent">Kemajuan: 0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div id="questions-container">
+            <!-- Questions injected here by JS -->
+        </div>
+
+        <div class="nav-buttons">
+            <button class="btn btn-outline" id="btn-prev" onclick="prevRound()">Sebelumnya</button>
+            <button class="btn" id="btn-next" onclick="nextRound()">Berikutnya</button>
+        </div>
+    </div>
+
+    <!-- Screen 3: Result -->
+    <div id="result-screen" class="hidden">
+        <div id="result-content">
+            <!-- Results injected here by JS -->
+        </div>
+        <div style="text-align: center; margin-top: 40px;">
+            <button class="btn btn-outline" onclick="location.reload()">Ulangi Tes Baru</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- DATA PERTANYAAN (100 Pertanyaan Unik) ---
+// Array format: [Teks Pertanyaan, Dimensi, Kutub]
+// Kutub menunjukkan orientasi. Jika Kutub = E, nilai 5 (Sangat Setuju) = +5 untuk E.
+const rawQuestions = [
+    // Dimensi E/I (Ekstraversi vs Introversi)
+    ["Saya merasa bersemangat dan berenergi setelah menghabiskan waktu di acara sosial yang ramai.", "EI", "E"],
+    ["Saya lebih suka menghabiskan akhir pekan sendirian di rumah daripada pergi keluar bersama teman-teman.", "EI", "I"],
+    ["Saya mudah memulai percakapan dengan orang yang baru saya kenal.", "EI", "E"],
+    ["Saya sering merasa lelah jika harus berinteraksi dengan banyak orang sepanjang hari.", "EI", "I"],
+    ["Saya suka menjadi pusat perhatian dalam sebuah kelompok.", "EI", "E"],
+    ["Saya lebih suka berkomunikasi melalui pesan tertulis daripada berbicara langsung.", "EI", "I"],
+    ["Saya memiliki lingkaran pertemanan yang sangat luas dan terus bertambah.", "EI", "E"],
+    ["Saya memikirkan matang-matang apa yang akan saya katakan sebelum berbicara.", "EI", "I"],
+    ["Saya merasa nyaman saat harus berbicara di depan umum secara dadakan.", "EI", "E"],
+    ["Saya lebih menikmati percakapan mendalam dengan satu orang daripada obrolan ringan dalam kelompok besar.", "EI", "I"],
+    ["Saya cenderung membagikan pikiran dan perasaan saya secara terbuka kepada orang lain.", "EI", "E"],
+    ["Saya butuh waktu sendiri yang cukup lama untuk memulihkan energi setelah acara sosial.", "EI", "I"],
+    ["Saya merasa bosan jika terlalu lama sendirian tanpa interaksi sosial.", "EI", "E"],
+    ["Saya lebih memilih bekerja di ruangan yang tenang dan tertutup.", "EI", "I"],
+    ["Saya sering mengambil inisiatif untuk mengorganisir acara kumpul-kumpul.", "EI", "E"],
+    ["Saya dikenal sebagai orang yang tenang dan tidak banyak bicara oleh orang di sekitar saya.", "EI", "I"],
+    ["Saya lebih suka bekerja dalam tim yang interaktif daripada bekerja sendiri.", "EI", "E"],
+    ["Saya cenderung menyimpan masalah saya sendiri daripada menceritakannya ke orang lain.", "EI", "I"],
+    ["Saya mengekspresikan antusiasme saya dengan jelas melalui suara dan bahasa tubuh.", "EI", "E"],
+    ["Saya menghindari tempat yang terlalu bising atau ramai jika memungkinkan.", "EI", "I"],
+    ["Berada di sekitar orang banyak membuat saya merasa lebih hidup.", "EI", "E"],
+    ["Saya merasa kesulitan atau enggan jika harus berjejaring (networking) dengan orang asing.", "EI", "I"],
+    ["Saya suka berbagi ide dengan mendiskusikannya keras-keras bersama orang lain.", "EI", "E"],
+    ["Saya sangat selektif dalam memilih siapa yang bisa masuk ke lingkaran pertemanan terdekat saya.", "EI", "I"],
+    ["Saya tidak ragu untuk menyapa orang terlebih dahulu saat memasuki ruangan baru.", "EI", "E"],
+
+    // Dimensi S/N (Sensing vs Intuition)
+    ["Saya lebih fokus pada fakta dan detail yang nyata daripada ide-ide yang abstrak.", "SN", "S"],
+    ["Saya sering memikirkan masa depan dan berbagai kemungkinan yang bisa terjadi.", "SN", "N"],
+    ["Saya lebih suka instruksi yang spesifik dan langkah demi langkah saat mempelajari hal baru.", "SN", "S"],
+    ["Saya senang mencari makna tersembunyi atau simbolisme dalam suatu kejadian.", "SN", "N"],
+    ["Saya sangat memperhatikan lingkungan fisik di sekitar saya (suara, warna, detail benda).", "SN", "S"],
+    ["Saya lebih tertarik membahas teori dan konsep daripada kenyataan praktis sehari-hari.", "SN", "N"],
+    ["Saya mempercayai pengalaman masa lalu saya sebagai panduan terbaik untuk bertindak.", "SN", "S"],
+    ["Saya sering mengandalkan firasat atau intuisi ketika membuat pilihan.", "SN", "N"],
+    ["Saya lebih suka berurusan dengan masalah praktis yang ada di depan mata.", "SN", "S"],
+    ["Saya sering merasa bosan dengan rutinitas dan ingin mencoba cara baru.", "SN", "N"],
+    ["Saya mengingat detail-detail spesifik dari sebuah percakapan atau kejadian dengan akurat.", "SN", "S"],
+    ["Saya lebih suka membayangkan 'apa yang bisa terjadi' daripada melihat 'apa yang sedang terjadi'.", "SN", "N"],
+    ["Saya lebih menghargai orang yang praktis dan realistis.", "SN", "S"],
+    ["Saya menikmati diskusi filosofis tentang tujuan hidup dan alam semesta.", "SN", "N"],
+    ["Saya menggunakan cara-cara yang sudah terbukti berhasil saat menyelesaikan tugas.", "SN", "S"],
+    ["Saya sering melompat dari satu ide ke ide lain saat sedang berpikir.", "SN", "N"],
+    ["Saya membaca manual atau petunjuk penggunaan secara berurutan sebelum merakit sesuatu.", "SN", "S"],
+    ["Saya lebih tertarik pada inovasi dan perubahan daripada melestarikan tradisi.", "SN", "N"],
+    ["Saya mendeskripsikan sesuatu secara harfiah dan apa adanya.", "SN", "S"],
+    ["Saya sering melihat pola atau hubungan antar kejadian yang tidak disadari orang lain.", "SN", "N"],
+    ["Saya lebih menyukai pekerjaan yang membutuhkan ketelitian tingkat tinggi.", "SN", "S"],
+    ["Saya cenderung melihat gambaran besar dan sering mengabaikan detail-detail kecil.", "SN", "N"],
+    ["Saya merasa berpijak pada realitas dan tidak suka berangan-angan terlalu jauh.", "SN", "S"],
+    ["Saya sering merenungkan bagaimana segala sesuatu akan berkembang dalam 10 tahun ke depan.", "SN", "N"],
+    ["Saya belajar paling baik melalui praktik langsung daripada membaca teorinya.", "SN", "S"],
+
+    // Dimensi T/F (Thinking vs Feeling)
+    ["Saya membuat keputusan berdasarkan logika dan analisis objektif, bukan emosi.", "TF", "T"],
+    ["Saya sangat mempertimbangkan perasaan orang lain sebelum mengambil keputusan.", "TF", "F"],
+    ["Saya percaya bahwa kebenaran lebih penting daripada menjaga harmoni.", "TF", "T"],
+    ["Saya berusaha keras untuk menghindari konflik dan perdebatan dengan orang lain.", "TF", "F"],
+    ["Saya dapat dengan mudah mengesampingkan perasaan pribadi saat menilai suatu situasi.", "TF", "T"],
+    ["Saya sering merasa ikut sedih atau terpengaruh oleh suasana emosional di sekitar saya.", "TF", "F"],
+    ["Saya lebih memilih dinilai sebagai orang yang adil dan kompeten daripada orang yang baik hati.", "TF", "T"],
+    ["Saya membuat keputusan hidup yang penting berdasarkan kata hati atau empati.", "TF", "F"],
+    ["Saya suka menganalisis pro dan kontra secara matematis atau logis sebelum bertindak.", "TF", "T"],
+    ["Saya sering mendahulukan kebutuhan orang lain di atas kebutuhan saya sendiri.", "TF", "F"],
+    ["Saya melihat perdebatan sebagai cara sehat untuk menguji kebenaran suatu ide.", "TF", "T"],
+    ["Saya merasa tidak nyaman memberikan kritik negatif meskipun itu benar.", "TF", "F"],
+    ["Saya tetap tenang dan rasional ketika orang lain mulai emosional.", "TF", "T"],
+    ["Saya mudah memaafkan orang lain karena saya mencoba memahami posisi mereka.", "TF", "F"],
+    ["Saya percaya bahwa aturan harus diterapkan secara setara tanpa pandang bulu.", "TF", "T"],
+    ["Saya percaya setiap situasi itu unik dan aturan harus fleksibel demi kemanusiaan.", "TF", "F"],
+    ["Saya lebih mudah melihat kelemahan atau kesalahan dalam sebuah argumen.", "TF", "T"],
+    ["Saya lebih fokus pada niat baik seseorang daripada hasil kerja mereka.", "TF", "F"],
+    ["Saya lebih menghargai efisiensi dan hasil daripada proses yang menyenangkan semua orang.", "TF", "T"],
+    ["Saya sering menjadi tempat curhat karena orang merasa saya bisa berempati.", "TF", "F"],
+    ["Jika teman saya salah, saya akan langsung memberitahunya dengan tegas.", "TF", "T"],
+    ["Saya memilih kata-kata dengan sangat hati-hati agar tidak menyinggung siapa pun.", "TF", "F"],
+    ["Saya tidak mudah tersinggung oleh kritik yang obyektif dan langsung.", "TF", "T"],
+    ["Saya merasa sangat dihargai ketika orang mengakui kontribusi emosional saya.", "TF", "F"],
+    ["Saya cenderung mencari solusi praktis saat ada masalah, daripada sekadar memberi simpati.", "TF", "T"],
+
+    // Dimensi J/P (Judging vs Perceiving)
+    ["Saya lebih suka memiliki jadwal yang terencana dan menaatinya.", "JP", "J"],
+    ["Saya merasa nyaman melakukan segala sesuatu secara spontan tanpa rencana.", "JP", "P"],
+    ["Saya merasa tenang setelah membuat keputusan dan menetapkan rencana final.", "JP", "J"],
+    ["Saya lebih suka membiarkan opsi saya terbuka selama mungkin sebelum memutuskan.", "JP", "P"],
+    ["Saya selalu membuat daftar tugas (to-do list) untuk mengatur hari saya.", "JP", "J"],
+    ["Saya merasa terkekang oleh jadwal yang terlalu ketat dan rutinitas kaku.", "JP", "P"],
+    ["Saya menyelesaikan pekerjaan jauh sebelum tenggat waktu (deadline).", "JP", "J"],
+    ["Saya bekerja paling maksimal saat tenggat waktu sudah sangat dekat.", "JP", "P"],
+    ["Saya menjaga meja kerja dan ruang tamu saya tetap rapi dan terorganisir.", "JP", "J"],
+    ["Saya sering mengubah rencana di tengah jalan jika menemukan hal yang lebih menarik.", "JP", "P"],
+    ["Saya tidak suka kejutan dan lebih memilih segala hal dapat diprediksi.", "JP", "J"],
+    ["Saya menikmati kejutan dan tantangan yang muncul secara tiba-tiba.", "JP", "P"],
+    ["Saya memprioritaskan menyelesaikan kewajiban sebelum bersantai.", "JP", "J"],
+    ["Saya sering mencampur antara waktu bekerja dan waktu bermain.", "JP", "P"],
+    ["Saya merencanakan liburan saya secara detail (tiket, akomodasi, jadwal harian).", "JP", "J"],
+    ["Saat liburan, saya pergi ke suatu tempat dan memutuskan aktivitas saat tiba di sana.", "JP", "P"],
+    ["Saya merasa kesal jika ada orang yang mengubah rencana yang sudah disepakati.", "JP", "J"],
+    ["Saya sangat mudah beradaptasi dengan perubahan situasi yang mendadak.", "JP", "P"],
+    ["Saya memiliki tujuan hidup yang terstruktur untuk jangka panjang.", "JP", "J"],
+    ["Saya lebih suka mengalir mengikuti arus dan melihat ke mana hidup membawa saya.", "JP", "P"],
+    ["Saya memecah proyek besar menjadi bagian-bagian kecil yang terjadwal.", "JP", "J"],
+    ["Saya memulai proyek dengan antusias tanpa terlalu memikirkan struktur awalnya.", "JP", "P"],
+    ["Saya lebih suka lingkungan di mana segala aturannya jelas dan terdefinisi.", "JP", "J"],
+    ["Saya lebih suka lingkungan kerja yang sangat fleksibel dan santai.", "JP", "P"],
+    ["Keteraturan dan kedisiplinan adalah kunci kesuksesan menurut saya.", "JP", "J"]
+];
+
+const questions = rawQuestions.map((q, index) => ({
+    id: index + 1,
+    text: q[0],
+    dim: q[1],
+    pole: q[2]
+}));
+
+// --- PROFIL 16 TIPE KEPRIBADIAN ---
+const profiles = {
+    "ISTJ": {
+        name: "Sang Ahli Logistik (ISTJ)",
+        summary: "Anda adalah individu yang praktis, logis, dan sangat dapat diandalkan. Anda menghargai tradisi, tatanan, dan dedikasi. Saat Anda memberikan komitmen, Anda akan menyelesaikannya dengan tuntas tanpa banyak alasan.",
+        strengths: ["Sangat teliti dan berorientasi pada detail.", "Jujur, langsung, dan dapat diandalkan.", "Kemampuan berorganisasi yang sangat baik.", "Tetap tenang dalam situasi krisis.", "Menghormati aturan dan struktur."],
+        areas: ["Terlalu kaku dan sulit menerima perubahan mendadak.", "Cenderung menghakimi ide yang belum teruji.", "Sering lupa mempertimbangkan perasaan orang lain.", "Menyalahkan diri sendiri terlalu keras saat gagal."],
+        rec: {
+            career: "Lingkungan kerja terstruktur (Manajemen, Akuntansi, Hukum, IT).",
+            edu: "Metode belajar sistematis dan membaca buku teks secara berurutan.",
+            rel: "Tunjukkan apresiasi Anda melalui tindakan nyata, namun jangan lupakan afirmasi verbal.",
+            social: "Pilih kelompok kecil yang memiliki minat praktis yang sama.",
+            decisions: "Gunakan fakta, tetapi sediakan ruang 10% untuk mencoba pendekatan baru.",
+            emotions: "Sadari bahwa orang lain mungkin butuh didengarkan, bukan hanya diberi solusi.",
+            selfdev: "Latih fleksibilitas dengan mencoba rute jalan baru atau menu baru setiap minggu.",
+            goals: "Buat target yang terukur, namun jangan panik jika jalurnya harus sedikit bergeser."
+        }
+    },
+    "ISFJ": {
+        name: "Sang Pelindung (ISFJ)",
+        summary: "Anda sangat hangat, protektif, dan selalu siap membantu. Anda mengamati detail tentang orang lain dan menggunakan ingatan tersebut untuk membuat mereka merasa dihargai. Dedikasi Anda kepada orang-orang terkasih tidak tertandingi.",
+        strengths: ["Sangat suportif dan peduli pada orang lain.", "Bisa diandalkan dan pekerja keras.", "Sangat jeli melihat detail kehidupan sehari-hari.", "Setia dan melindungi orang-orang terdekat.", "Keterampilan praktis yang sangat baik."],
+        areas: ["Cenderung mengorbankan diri sendiri demi orang lain.", "Sangat segan menghadapi konflik.", "Sulit menerima perubahan besar.", "Menyimpan perasaan atau beban sendirian."],
+        rec: {
+            career: "Pekerjaan yang membantu orang secara nyata (Keperawatan, SDM, Pengajaran, Administrasi).",
+            edu: "Belajar melalui praktik dan rutinitas teratur.",
+            rel: "Belajar mengatakan 'tidak' dan komunikasikan kebutuhan Anda, jangan hanya menebak kebutuhan pasangan.",
+            social: "Jaga keseimbangan energi; jangan selalu menjadi tuan rumah yang sibuk mengurus semua orang.",
+            decisions: "Jangan biarkan ketakutan akan konflik menahan Anda untuk mengambil keputusan yang benar.",
+            emotions: "Izinkan diri Anda untuk marah atau kecewa secara sehat.",
+            selfdev: "Jadwalkan 'Waktu untuk Diri Sendiri' yang tidak bisa diganggu gugat.",
+            goals: "Pastikan tujuan Anda juga menguntungkan diri Anda sendiri, bukan hanya keluarga."
+        }
+    },
+    "INFJ": {
+        name: "Sang Penasihat (INFJ)",
+        summary: "Anda adalah seorang idealis yang memiliki kedalaman visi. Anda tidak mencari keuntungan pribadi, melainkan ingin memberikan dampak bermakna. Intuisi tajam Anda membantu Anda memahami motivasi tersembunyi orang lain.",
+        strengths: ["Sangat berempati dan memahami motivasi orang.", "Prinsip dan nilai moral yang kuat.", "Kreatif dan penuh inspirasi.", "Berorientasi pada masa depan dan gambaran besar.", "Pekerja keras untuk hal yang Anda yakini."],
+        areas: ["Sangat rentan mengalami kelelahan (burnout).", "Terlalu perfeksionis dalam hubungan atau pekerjaan.", "Sulit terbuka dan sangat menjaga privasi.", "Sering mengabaikan detail praktis sehari-hari."],
+        rec: {
+            career: "Pekerjaan yang sejalan dengan nilai (Konseling, Penulisan, Desain, Psikologi).",
+            edu: "Pahami konsep utamanya dulu, baru turun ke detail.",
+            rel: "Jangan mencari pasangan yang 'sempurna'; hargai ketidaksempurnaan sebagai ruang untuk tumbuh.",
+            social: "Cari teman yang tidak hanya 'mengambil' energi Anda sebagai tempat curhat.",
+            decisions: "Gunakan intuisi, namun validasi dengan kenyataan logis di lapangan.",
+            emotions: "Jangan menyerap semua emosi negatif dunia; batasi konsumsi berita jika perlu.",
+            selfdev: "Berlatih mindfulness dan menyadari kondisi fisik Anda (makan, tidur).",
+            goals: "Pecah visi besar Anda menjadi langkah-langkah kecil yang dapat dilakukan hari ini."
+        }
+    },
+    "INTJ": {
+        name: "Sang Arsitek (INTJ)",
+        summary: "Anda adalah pemikir strategis yang imajinatif sekaligus rasional. Anda memiliki rencana dan cadangan rencana untuk segala hal. Anda selalu mencari cara untuk mengoptimalkan sistem dan mencapai efisiensi tertinggi.",
+        strengths: ["Pikiran strategis jangka panjang yang luar biasa.", "Sangat mandiri dan percaya diri pada kompetensi.", "Inovatif dan mampu melihat solusi dari sudut pandang baru.", "Objektif dan rasional.", "Haus akan pengetahuan."],
+        areas: ["Bisa terlihat arogan atau terlalu kritis.", "Mengabaikan emosi (baik diri sendiri maupun orang lain).", "Tidak sabar dengan aturan yang dianggap tidak masuk akal.", "Cenderung over-analisis (lumpuh karena analisis)."],
+        rec: {
+            career: "Peran analitis independen (Rekayasa, Strategi Bisnis, Sains, Analis Sistem).",
+            edu: "Belajar mandiri, mengumpulkan teori, dan membuat kerangka konsep sendiri.",
+            rel: "Pahami bahwa perasaan pasangan adalah 'fakta' bagi mereka; Anda tidak bisa mendebatnya dengan logika.",
+            social: "Pilih interaksi yang bermakna intelektual daripada obrolan ringan basa-basi.",
+            decisions: "Terima bahwa kadang keputusan terbaik melibatkan faktor manusia, bukan hanya angka.",
+            emotions: "Latih kecerdasan emosional; menekan emosi terus-menerus tidak efisien.",
+            selfdev: "Belajar menghargai proses kolaborasi, bukan sekadar hasilnya.",
+            goals: "Buat target rasional dan komunikasikan visi Anda dengan bahasa yang bisa dimengerti tim."
+        }
+    },
+    "ISTP": {
+        name: "Sang Mekanik (ISTP)",
+        summary: "Anda adalah penjelajah pragmatis yang merespons dunia menggunakan akal sehat dan tangan Anda. Anda suka membongkar berbagai hal, melihat cara kerjanya, dan merakitnya kembali secara lebih efisien.",
+        strengths: ["Pemecah masalah praktis yang luar biasa.", "Tetap santai dan tenang dalam krisis.", "Fleksibel dan sangat mudah beradaptasi.", "Mandiri dan mandiri.", "Keterampilan observasi fisik yang tajam."],
+        areas: ["Sangat mudah bosan dengan rutinitas.", "Sulit berkomitmen pada rencana jangka panjang.", "Bisa secara tidak sengaja menyinggung perasaan karena bersikap terlalu blak-blakan.", "Suka mengambil risiko fisik atau emosional demi sensasi."],
+        rec: {
+            career: "Pekerjaan teknis atau lapangan (Teknik, Mekanik, Pilot, Analis Krisis).",
+            edu: "Pembelajaran berbasis eksperimen dan trial-and-error langsung.",
+            rel: "Beri tahu pasangan Anda bahwa Anda butuh kebebasan pribadi; jangan menghilang begitu saja.",
+            social: "Terlibat dalam aktivitas hobi fisik bersama teman.",
+            decisions: "Lihat dampak jangka panjang, jangan hanya memutuskan berdasarkan kepraktisan sesaat.",
+            emotions: "Belajar mengungkapkan apresiasi dengan kata-kata, bukan hanya tindakan.",
+            selfdev: "Selesaikan proyek yang Anda mulai, bahkan saat tahap 'baru' dan menyenangkannya sudah lewat.",
+            goals: "Tetapkan tonggak pencapaian jangka pendek untuk menjaga motivasi Anda."
+        }
+    },
+    "ISFP": {
+        name: "Sang Petualang (ISFP)",
+        summary: "Anda adalah seniman sejati dalam kehidupan, sangat peka secara estetika dan mengekspresikan diri melalui tindakan nyata, seni, atau desain. Anda fleksibel, spontan, dan menjunjung tinggi harmoni personal.",
+        strengths: ["Kreatif, imajinatif, dan estetis.", "Sangat toleran dan berpikiran terbuka.", "Penuh gairah pada hal-hal yang mereka cintai.", "Peka terhadap kebutuhan emosional orang lain.", "Mampu menikmati hidup di saat ini."],
+        areas: ["Sulit membuat rencana jangka panjang untuk masa depan.", "Menghindari konflik sampai meledak di kemudian hari.", "Harga diri dapat mudah goyah jika dikritik.", "Tidak terlalu peduli dengan pengorganisasian atau administrasi."],
+        rec: {
+            career: "Pekerjaan yang fleksibel dan estetis (Desain, Seni, Konservasi Alam, Terapis).",
+            edu: "Belajar dalam lingkungan yang santai dan tanpa tekanan kompetisi ketat.",
+            rel: "Utarakan saat ada masalah; memendamnya hanya akan menciptakan jarak.",
+            social: "Hargai lingkar pertemanan kecil namun intim yang menerima Anda apa adanya.",
+            decisions: "Jangan lari dari pilihan sulit; gunakan nilai inti Anda sebagai kompas.",
+            emotions: "Sadari bahwa kritik terhadap karya Anda bukanlah kritik terhadap nilai Anda sebagai manusia.",
+            selfdev: "Mulai berlatih membuat perencanaan keuangan atau waktu yang ringan.",
+            goals: "Terjemahkan gairah sesaat Anda menjadi keterampilan yang dapat bertahan lama."
+        }
+    },
+    "INFP": {
+        name: "Sang Mediator (INFP)",
+        summary: "Anda adalah jiwa puitis yang mencari kebaikan dalam segala hal dan setiap orang. Anda digerakkan oleh prinsip-prinsip yang dalam dan selalu berusaha menyelaraskan hidup dengan nilai-nilai moral Anda.",
+        strengths: ["Idealis dan digerakkan oleh nilai moral yang kuat.", "Sangat berempati dan peduli.", "Kreativitas tinggi dalam penulisan atau seni.", "Berpikiran terbuka dan tidak menghakimi.", "Berdedikasi untuk pertumbuhan pribadi."],
+        areas: ["Sering terjebak dalam angan-angan dan melupakan realitas praktis.", "Sangat rentan terhadap kritik.", "Kesulitan menghadapi konfrontasi langsung.", "Terlalu altruistik hingga merugikan diri sendiri."],
+        rec: {
+            career: "Pekerjaan yang penuh makna (Penulisan, HR, Psikologi, NGO).",
+            edu: "Membaca banyak buku dan mengeksplorasi konsep humaniora.",
+            rel: "Komunikasikan kekecewaan Anda. Pasangan Anda tidak bisa membaca pikiran Anda.",
+            social: "Temukan komunitas yang berbagi nilai-nilai filosofis dan kemanusiaan Anda.",
+            decisions: "Seimbangkan nilai idealis Anda dengan perhitungan logis.",
+            emotions: "Jangan biarkan perasaan hari ini menentukan seluruh keputusan masa depan Anda.",
+            selfdev: "Latih diri Anda menyelesaikan tugas administratif tepat waktu sebagai bentuk tanggung jawab pada diri sendiri.",
+            goals: "Jadikan visi dunia yang lebih baik sebagai pendorong tindakan nyata, bukan sekadar lamunan."
+        }
+    },
+    "INTP": {
+        name: "Sang Pemikir (INTP)",
+        summary: "Anda adalah penemu intelektual, didorong oleh keinginan untuk memahami cara alam semesta bekerja. Anda menyukai teori, logika yang ketat, dan sering menemukan ketidakkonsistenan yang dilewatkan orang lain.",
+        strengths: ["Kemampuan analisis abstrak yang luar biasa.", "Berpikir out-of-the-box (orisinal).", "Objektif, logis, dan rasional.", "Cepat melihat pola dan ketidakkonsistenan.", "Pikiran yang terbuka terhadap teori baru."],
+        areas: ["Sering teralihkan sebelum menyelesaikan sebuah proyek.", "Bisa terlihat dingin, acuh tak acuh, atau sombong.", "Kesulitan dengan aturan dan birokrasi.", "Sering meragukan diri sendiri dan terus-menerus merevisi karya."],
+        rec: {
+            career: "Pekerjaan yang memecahkan masalah kompleks (Pemrograman, Matematika, Penelitian, Data Sains).",
+            edu: "Mengejar topik yang paling membangkitkan rasa ingin tahu, lalu menggabungkannya ke kurikulum.",
+            rel: "Ingatlah untuk menanyakan kabar pasangan Anda dan memberikan afirmasi, bukan hanya memberikan solusi masalah mereka.",
+            social: "Bergabunglah dengan forum intelektual atau grup game yang strategis.",
+            decisions: "Pada satu titik, Anda harus berhenti mengumpulkan data dan mulai mengambil tindakan.",
+            emotions: "Jangan merasionalisasi emosi Anda. Emosi itu dirasakan, bukan dihitung.",
+            selfdev: "Kembangkan disiplin eksekusi. Ide hebat tidak berguna jika tidak diwujudkan.",
+            goals: "Fokuslah pada satu proyek besar hingga tuntas sebelum beralih ke rasa penasaran berikutnya."
+        }
+    },
+    "ESTP": {
+        name: "Sang Pengusaha (ESTP)",
+        summary: "Anda adalah orang yang penuh aksi, selalu berada di tengah-tengah peristiwa. Daripada berteori, Anda melompat langsung ke dalam masalah, mencari perbaikan yang praktis, dan berani mengambil risiko untuk hasil yang instan.",
+        strengths: ["Sangat berani dan rasional.", "Jeli mengamati perubahan kecil di lingkungan.", "Pemecah masalah instan yang tangguh.", "Keterampilan sosial dan pesona yang alami.", "Sangat mudah beradaptasi."],
+        areas: ["Bertindak sebelum berpikir, sering mengabaikan konsekuensi jangka panjang.", "Cenderung menabrak aturan untuk mempercepat proses.", "Sangat mudah bosan.", "Kurang peka terhadap sensitivitas emosional orang yang lebih lembut."],
+        rec: {
+            career: "Peran yang dinamis dan kompetitif (Penjualan, Atletik, Manajemen Krisis, Hiburan).",
+            edu: "Belajar melalui praktik, simulasi, dan kompetisi yang menyenangkan.",
+            rel: "Luangkan waktu untuk pembicaraan mendalam mengenai masa depan, bukan hanya bersenang-senang saat ini.",
+            social: "Jadilah pusat perhatian yang suportif bagi teman-teman Anda.",
+            decisions: "Pause selama 3 detik sebelum mengambil keputusan besar. Evaluasi risikonya.",
+            emotions: "Cobalah untuk berhenti dan mendengarkan keluh kesah teman tanpa langsung menyeretnya beraktivitas fisik.",
+            selfdev: "Belajar membaca buku atau mempelajari keterampilan teoretis yang akan menunjang aksi Anda di lapangan.",
+            goals: "Arahkan energi tak terbatas Anda pada satu tujuan besar yang terencana rapi."
+        }
+    },
+    "ESFP": {
+        name: "Sang Penghibur (ESFP)",
+        summary: "Anda adalah percikan kehidupan dalam setiap pesta. Anda spontan, antusias, dan senang mengajak orang lain merasakan keseruan dunia. Anda sangat peka terhadap estetika, mode, dan kenyamanan orang lain.",
+        strengths: ["Sangat sosial, ramah, dan menyenangkan.", "Keterampilan estetika dan gaya yang luar biasa.", "Mampu membuat orang lain merasa spesial.", "Praktis dan jeli secara fisik.", "Pemecah masalah jangka pendek yang responsif."],
+        areas: ["Sering menghindari tanggung jawab atau masalah sulit.", "Perencanaan masa depan yang sangat lemah.", "Mudah terdistraksi oleh kesenangan sesaat.", "Cenderung boros atau kurang terorganisir."],
+        rec: {
+            career: "Pekerjaan sosial dan dinamis (PR, Pariwisata, Seni Pertunjukan, Konsultan Mode).",
+            edu: "Belajar berkelompok dengan metode interaktif dan visual.",
+            rel: "Jangan menghindari percakapan serius karena takut merusak suasana hati.",
+            social: "Pastikan persahabatan Anda bukan hanya untuk bersenang-senang, tetapi juga mendukung di kala sulit.",
+            decisions: "Jangan biarkan gaya hidup spontan merusak stabilitas masa depan Anda.",
+            emotions: "Hargai emosi negatif sebagai bagian dari pertumbuhan, jangan selalu lari ke hiburan.",
+            selfdev: "Mulailah membuat anggaran keuangan sederhana dan disiplin menaatinya.",
+            goals: "Tetapkan target untuk masa depan, bukan hanya target liburan akhir pekan depan."
+        }
+    },
+    "ENFP": {
+        name: "Sang Juru Kampanye (ENFP)",
+        summary: "Anda adalah individu yang berjiwa bebas, energik, dan antusias. Hidup adalah teka-teki raksasa di mana segalanya saling terhubung. Anda memancarkan niat baik dan sering menjadi sumber inspirasi bagi orang di sekitar Anda.",
+        strengths: ["Sangat penasaran dan imajinatif.", "Antusias, energik, dan mudah bergaul.", "Mampu melihat makna dan hubungan antarkejadian.", "Komunikator yang sangat baik dan persuasif.", "Empati yang mendalam."],
+        areas: ["Sangat kesulitan fokus pada tugas administratif atau detail membosankan.", "Terlalu memikirkan makna di balik setiap interaksi kecil.", "Sering kelebihan komitmen karena sulit menolak peluang baru.", "Sulit disiplin pada satu jalur ketat."],
+        rec: {
+            career: "Pekerjaan kreatif yang berhubungan dengan manusia (Pemasaran, Jurnalisme, Konseling, Pengusaha).",
+            edu: "Belajar melalui diskusi, brainstorming, dan proyek kreatif lintas disiplin.",
+            rel: "Hargai usaha praktis pasangan Anda (seperti membereskan rumah) sebagai bentuk cinta.",
+            social: "Jaga keseimbangan; jangan membakar diri Anda untuk menyenangkan semua kelompok sosial Anda.",
+            decisions: "Sebelum mengambil proyek baru, selesaikan setidaknya satu proyek lama yang terbengkalai.",
+            emotions: "Sadari bahwa tidak semua orang bereaksi secara emosional seperti Anda.",
+            selfdev: "Latih kemampuan fokus harian (misal dengan teknik Pomodoro).",
+            goals: "Pilih satu visi besar, buat kerangkanya, dan delegasikan pekerjaan detail jika memungkinkan."
+        }
+    },
+    "ENTP": {
+        name: "Sang Pendebat (ENTP)",
+        summary: "Anda adalah pendebat intelektual yang brilian, menyukai tantangan mental dan tidak segan membongkar ide-ide tradisional. Otak Anda seperti mesin pembuat ide yang bekerja secara konstan.",
+        strengths: ["Berpengetahuan luas dan cepat tanggap.", "Sangat baik dalam brainstorming dan strategi orisinal.", "Sangat karismatik dan cepat beradaptasi.", "Tidak takut berdebat demi menemukan kebenaran.", "Mampu menyerap konsep baru dengan cepat."],
+        areas: ["Bisa sangat argumentatif hingga mengganggu harmoni.", "Sangat kesulitan mengimplementasikan dan menyelesaikan ide.", "Sering meremehkan norma, aturan, dan perasaan orang.", "Mudah kehilangan minat setelah teka-teki terselesaikan."],
+        rec: {
+            career: "Peran yang menuntut inovasi intelektual (Konsultan, Penemu, Pengacara, Analis Sistem).",
+            edu: "Mempelajari banyak bidang secara otodidak dan menantang teori dosen.",
+            rel: "Berhentilah 'berdebat' dengan pasangan Anda tentang perasaan mereka. Terkadang mereka hanya butuh pelukan.",
+            social: "Gunakan kemampuan debat Anda untuk membela teman, bukan menyudutkan mereka.",
+            decisions: "Nilai dampak sebuah tindakan pada kehidupan nyata, bukan hanya efisiensi teoritisnya.",
+            emotions: "Sadari empati Anda sendiri; jangan selalu menyembunyikannya di balik lapisan logika tajam.",
+            selfdev: "Praktikkan eksekusi. Tantangan terbesar Anda adalah menyelesaikan apa yang Anda mulai.",
+            goals: "Ubah kebiasaan berdebat menjadi kemampuan bernegosiasi yang memenangkan semua pihak."
+        }
+    },
+    "ESTJ": {
+        name: "Sang Eksekutif (ESTJ)",
+        summary: "Anda adalah organisator alami, penjaga tradisi, dan pemimpin yang memimpin dengan contoh. Anda memegang nilai-nilai kejujuran, dedikasi, dan martabat, serta tidak kenal lelah dalam mengatur manusia dan barang agar segalanya berjalan efisien.",
+        strengths: ["Berdedikasi tinggi dan berkemauan keras.", "Jujur, langsung, dan dapat diandalkan.", "Kemampuan mengorganisir dan memimpin yang sangat baik.", "Pencipta keteraturan dan efisiensi.", "Menyelesaikan pekerjaan tepat waktu."],
+        areas: ["Bisa menjadi sangat kaku dan keras kepala.", "Sulit menerima ide yang belum terbukti secara konvensional.", "Bisa tampak terlalu menuntut atau kritis.", "Fokus pada fakta sering kali mengabaikan emosi orang lain."],
+        rec: {
+            career: "Peran kepemimpinan struktural (Manajer, Militer, Eksekutif Bisnis, Hakim).",
+            edu: "Kurikulum yang terstruktur, kompetitif, dan memiliki aturan yang jelas.",
+            rel: "Luangkan waktu untuk menikmati momen tanpa merencanakan kegiatan keluarga secara militeristik.",
+            social: "Biarkan teman-teman Anda mengambil keputusan sesekali, Anda tidak perlu memimpin setiap saat.",
+            decisions: "Libatkan perspektif berbeda sebelum mengunci sebuah kebijakan.",
+            emotions: "Berlatih mendengar aktif. Pahami perasaan tim atau keluarga Anda sebelum memberi perintah.",
+            selfdev: "Latih toleransi terhadap ambiguitas; tidak semua hal di dunia ini bisa dikontrol.",
+            goals: "Tetapkan tujuan besar, namun bersikaplah fleksibel mengenai *cara* mencapainya."
+        }
+    },
+    "ESFJ": {
+        name: "Sang Konsul (ESFJ)",
+        summary: "Anda adalah pilar komunitas Anda. Ekstrovert, suportif, dan populer, Anda sangat fokus pada kebutuhan konkret keluarga dan teman-teman Anda. Anda memastikan semua orang merasa didengar, terawat, dan bahagia.",
+        strengths: ["Keterampilan sosial yang sangat baik dan suportif.", "Setia dan memiliki rasa kewajiban yang tinggi.", "Praktis dalam mengurus urusan sehari-hari.", "Sensitif dan hangat terhadap perasaan orang lain.", "Hebat dalam menyatukan orang-orang."],
+        areas: ["Sangat khawatir dengan status sosial atau pandangan orang lain.", "Tidak tahan terhadap konflik dan kritik.", "Cenderung memaksakan nilai tradisional kepada orang lain.", "Bisa sangat mengorbankan diri demi pengakuan."],
+        rec: {
+            career: "Pekerjaan dengan interaksi publik yang tinggi (Public Relations, Perawatan Kesehatan, Pengajaran, Event Organizer).",
+            edu: "Belajar dalam kelompok diskusi yang suportif dan kooperatif.",
+            rel: "Sadari bahwa konflik kecil yang diselesaikan dengan baik akan memperkuat hubungan, bukan menghancurkannya.",
+            social: "Jangan mengubah kepribadian Anda hanya agar disukai semua kelompok.",
+            decisions: "Jangan mengambil keputusan finansial atau karir murni demi membahagiakan orang tua/pasangan tanpa memikirkan kebahagiaan Anda.",
+            emotions: "Lepaskan beban emosional dengan bercerita; jangan hanya menjadi pendengar bagi orang lain.",
+            selfdev: "Belajarlah membangun harga diri dari dalam (internal validation), bukan dari pujian luar.",
+            goals: "Buat daftar keinginan murni milik Anda, bukan apa yang masyarakat harapkan dari Anda."
+        }
+    },
+    "ENFJ": {
+        name: "Sang Protagonis (ENFJ)",
+        summary: "Anda adalah pemimpin karismatik yang penuh empati. Anda memancarkan keaslian dan menggunakan intuisi Anda untuk memahami orang lain. Anda menginspirasi komunitas Anda untuk tumbuh dan mencapai kebaikan bersama.",
+        strengths: ["Pemimpin yang karismatik dan menginspirasi.", "Sangat berempati dan bisa dipercaya.", "Toleran dan andal dalam bekerja sama.", "Kemampuan komunikasi verbal yang sangat baik.", "Digerakkan oleh visi altruistik."],
+        areas: ["Sering kali terlalu mencampuri masalah orang lain (over-involved).", "Sangat sensitif terhadap kritik.", "Kadang meragukan diri sendiri atau merasa seperti penipu (imposter syndrome).", "Cenderung mengorbankan logika objektif demi menjaga harmoni."],
+        rec: {
+            career: "Pekerjaan kepemimpinan yang berfokus pada manusia (Pelatihan, Politik, HR, Konsultan Pendidikan).",
+            edu: "Belajar dengan mengajarkan kembali materi tersebut kepada orang lain.",
+            rel: "Hati-hati dengan 'hero complex'. Anda tidak perlu menyelamatkan pasangan Anda, dukunglah mereka menyelamatkan diri sendiri.",
+            social: "Ciptakan komunitas yang mendorong perkembangan nilai-nilai kemanusiaan.",
+            decisions: "Saat mengambil keputusan sulit (seperti memecat karyawan), tegaskan batasan profesional Anda.",
+            emotions: "Ambil waktu menyendiri untuk mengetahui apa yang *Anda* rasakan, terlepas dari perasaan orang-orang di sekitar.",
+            selfdev: "Pelajari keterampilan bersikap tegas (assertiveness) tanpa merasa bersalah.",
+            goals: "Arahkan karisma Anda untuk menciptakan sistem sosial yang dapat berjalan meski Anda tidak ada."
+        }
+    },
+    "ENTJ": {
+        name: "Sang Komandan (ENTJ)",
+        summary: "Anda adalah pemimpin bawaan dengan dorongan karismatik dan tingkat rasionalitas tinggi. Jika ada masalah yang rumit, Anda melihatnya sebagai tantangan untuk ditaklukkan. Efisiensi, strategi, dan keberanian adalah kunci kesuksesan Anda.",
+        strengths: ["Efisien dan selalu mencari optimasi.", "Sangat percaya diri dan memiliki kemauan besi.", "Pemikir strategis kelas atas.", "Karismatik dan menginspirasi visi besar.", "Sangat objektif menemukan solusi."],
+        areas: ["Bisa sangat keras kepala dan dominan.", "Sangat tidak toleran terhadap ketidakefisienan atau orang yang lambat.", "Cenderung dingin atau tidak peka secara emosional.", "Bisa tampak arogan saat mengoreksi orang lain."],
+        rec: {
+            career: "Posisi kepemimpinan dan strategis (CEO, Pengusaha, Pengacara Korporat, Konsultan Strategi).",
+            edu: "Membaca cepat untuk menemukan inti, lalu menerapkannya pada kasus dunia nyata.",
+            rel: "Ingatlah bahwa hubungan romantis bukanlah departemen bisnis yang harus dikelola efisiensinya.",
+            social: "Gunakan karisma Anda untuk memberdayakan teman, jangan memperlakukan mereka sebagai 'bawahan'.",
+            decisions: "Dengarkan sudut pandang etis dan emosional, karena manusia adalah variabel penting dalam sistem Anda.",
+            emotions: "Kecerdasan emosional adalah aset. Mempelajari empati akan membuat Anda menjadi pemimpin yang jauh lebih kuat.",
+            selfdev: "Belajarlah beristirahat. Berdiam diri sejenak bukanlah sebuah kelemahan.",
+            goals: "Pastikan Anda tidak meninggalkan orang-orang yang mendukung Anda saat Anda berlari menuju puncak kesuksesan."
+        }
+    }
+};
+
+// --- STATE MANAJEMEN ---
+let currentRound = 0;
+const roundsTotal = 20;
+const questionsPerRound = 5;
+let answers = {}; // format: { questionId: value }
+
+// --- LOGIKA APLIKASI ---
+
+function startTest() {
+    document.getElementById('intro-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    renderRound(0);
+}
+
+function renderRound(roundIndex) {
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+    
+    const startIndex = roundIndex * questionsPerRound;
+    const endIndex = startIndex + questionsPerRound;
+    const currentQuestions = questions.slice(startIndex, endIndex);
+    
+    currentQuestions.forEach(q => {
+        const qCard = document.createElement('div');
+        qCard.className = 'question-card';
+        
+        let optionsHTML = '';
+        const labels = ["Sangat Tidak Setuju", "Tidak Setuju", "Netral", "Setuju", "Sangat Setuju"];
+        
+        for (let i = 1; i <= 5; i++) {
+            const isChecked = answers[q.id] === i ? 'checked' : '';
+            const isSelectedClass = answers[q.id] === i ? 'selected' : '';
+            optionsHTML += `
+                <label class="option-label ${isSelectedClass}" onclick="selectOption(${q.id}, ${i}, this)">
+                    <input type="radio" name="q${q.id}" value="${i}" ${isChecked}>
+                    ${labels[i-1]}
+                </label>
+            `;
+        }
+        
+        qCard.innerHTML = `
+            <div class="question-text">${q.id}. ${q.text}</div>
+            <div class="options-grid">
+                ${optionsHTML}
+            </div>
+        `;
+        container.appendChild(qCard);
+    });
+
+    // Update UI Stats
+    document.getElementById('round-info').innerText = `Putaran ${roundIndex + 1} dari ${roundsTotal}`;
+    document.getElementById('question-info').innerText = `Pertanyaan ${startIndex + 1} sampai ${endIndex} dari 100`;
+    
+    updateProgress();
+    
+    // Tombol control
+    document.getElementById('btn-prev').disabled = roundIndex === 0;
+    const btnNext = document.getElementById('btn-next');
+    if (roundIndex === roundsTotal - 1) {
+        btnNext.innerText = "Lihat Hasil";
+        btnNext.style.background = "var(--success)";
+    } else {
+        btnNext.innerText = "Berikutnya";
+        btnNext.style.background = "var(--primary)";
+    }
+}
+
+function selectOption(qId, val, element) {
+    answers[qId] = val;
+    // Update visual
+    const siblings = element.parentElement.children;
+    for(let el of siblings) {
+        el.classList.remove('selected');
+    }
+    element.classList.add('selected');
+    updateProgress();
+}
+
+function updateProgress() {
+    const answeredCount = Object.keys(answers).length;
+    const percent = Math.round((answeredCount / 100) * 100);
+    document.getElementById('progress-percent').innerText = `Kemajuan: ${percent}%`;
+    document.getElementById('progress-fill').style.width = `${percent}%`;
+}
+
+function nextRound() {
+    // Validasi apakah 5 pertanyaan di round ini sudah dijawab
+    const startIndex = currentRound * questionsPerRound;
+    const endIndex = startIndex + questionsPerRound;
+    
+    for (let i = startIndex + 1; i <= endIndex; i++) {
+        if (!answers[i]) {
+            alert("Harap jawab semua pertanyaan di putaran ini sebelum melanjutkan.");
+            return;
+        }
+    }
+
+    if (currentRound < roundsTotal - 1) {
+        currentRound++;
+        renderRound(currentRound);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        calculateResults();
+    }
+}
+
+function prevRound() {
+    if (currentRound > 0) {
+        currentRound--;
+        renderRound(currentRound);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function calculateResults() {
+    // Inisialisasi Skor
+    let scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+    
+    // Perhitungan
+    questions.forEach(q => {
+        const val = answers[q.id];
+        // Tambahkan nilai ke kutub yang dituju
+        scores[q.pole] += val;
+    });
+
+    // Perbandingan Kutub
+    // Dimensi 1: E vs I
+    const scoreE = scores.E + (25 * 6 - scores.I); // Normalisasi ke total skor bayangan
+    const scoreI = scores.I + (25 * 6 - scores.E);
+    
+    const scoreS = scores.S + (25 * 6 - scores.N);
+    const scoreN = scores.N + (25 * 6 - scores.S);
+    
+    const scoreT = scores.T + (25 * 6 - scores.F);
+    const scoreF = scores.F + (25 * 6 - scores.T);
+    
+    const scoreJ = scores.J + (25 * 6 - scores.P);
+    const scoreP = scores.P + (25 * 6 - scores.J);
+
+    // Tentukan Huruf
+    let type = "";
+    type += (scoreE >= scoreI) ? "E" : "I";
+    type += (scoreS >= scoreN) ? "S" : "N";
+    type += (scoreT >= scoreF) ? "T" : "F";
+    type += (scoreJ >= scoreP) ? "J" : "P";
+
+    // Hitung Persentase Akurat
+    const getPercent = (a, b) => Math.round((a / (a + b)) * 100);
+    const pctE = getPercent(scoreE, scoreI);
+    const pctI = 100 - pctE;
+    
+    const pctS = getPercent(scoreS, scoreN);
+    const pctN = 100 - pctS;
+    
+    const pctT = getPercent(scoreT, scoreF);
+    const pctF = 100 - pctT;
+    
+    const pctJ = getPercent(scoreJ, scoreP);
+    const pctP = 100 - pctJ;
+
+    const resultData = profiles[type];
+    
+    showResultScreen(type, resultData, {pctE, pctI, pctS, pctN, pctT, pctF, pctJ, pctP});
+}
+
+function generateListHTML(arr) {
+    return `<ul>${arr.map(item => `<li>${item}</li>`).join('')}</ul>`;
+}
+
+function showResultScreen(type, data, pct) {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    const resultScreen = document.getElementById('result-screen');
+    const content = document.getElementById('result-content');
+    
+    let html = `
+        <div class="result-section" style="text-align: center; border-top: 5px solid var(--primary);">
+            <div class="type-title">${type}</div>
+            <div class="type-subtitle">${data.name}</div>
+            <p style="font-size: 16px; max-width: 600px; margin: 0 auto;">${data.summary}</p>
+        </div>
+
+        <div class="result-section">
+            <h3>Analisis Empat Dimensi</h3>
+            <p>Preferensi kecenderungan Anda berdasarkan skala persentase:</p>
+            
+            <div class="chart-row">
+                <div class="chart-labels"><span>Ekstraversi (E) - ${pct.pctE}%</span> <span>Introversi (I) - ${pct.pctI}%</span></div>
+                <div class="chart-bar-bg">
+                    <div class="chart-bar-left" style="width: ${pct.pctE}%"></div>
+                    <div class="chart-bar-right" style="width: ${pct.pctI}%"></div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top:5px;">Cara Anda mengarahkan energi.</div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-labels"><span>Sensing (S) - ${pct.pctS}%</span> <span>Intuition (N) - ${pct.pctN}%</span></div>
+                <div class="chart-bar-bg">
+                    <div class="chart-bar-left" style="width: ${pct.pctS}%"></div>
+                    <div class="chart-bar-right" style="width: ${pct.pctN}%"></div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top:5px;">Cara Anda mengolah informasi.</div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-labels"><span>Thinking (T) - ${pct.pctT}%</span> <span>Feeling (F) - ${pct.pctF}%</span></div>
+                <div class="chart-bar-bg">
+                    <div class="chart-bar-left" style="width: ${pct.pctT}%"></div>
+                    <div class="chart-bar-right" style="width: ${pct.pctF}%"></div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top:5px;">Cara Anda mengambil keputusan.</div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-labels"><span>Judging (J) - ${pct.pctJ}%</span> <span>Perceiving (P) - ${pct.pctP}%</span></div>
+                <div class="chart-bar-bg">
+                    <div class="chart-bar-left" style="width: ${pct.pctJ}%"></div>
+                    <div class="chart-bar-right" style="width: ${pct.pctP}%"></div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top:5px;">Cara Anda mengatur gaya hidup.</div>
+            </div>
+            ${(pct.pctE >= 45 && pct.pctE <= 55) || (pct.pctS >= 45 && pct.pctS <= 55) || (pct.pctT >= 45 && pct.pctT <= 55) || (pct.pctJ >= 45 && pct.pctJ <= 55) ? 
+            `<div style="background: #FEF3C7; color: #92400E; padding: 10px; border-radius: 8px; font-size: 14px; margin-top:15px;">
+                <strong>Catatan:</strong> Beberapa dimensi Anda memiliki persentase yang hampir seimbang (mendekati 50%). Ini berarti preferensi Anda sangat adaptif dan dapat berubah menyesuaikan situasi lingkungan Anda.
+            </div>` : ''}
+        </div>
+
+        <div class="result-section" style="display:flex; flex-wrap: wrap; gap: 20px;">
+            <div style="flex: 1; min-width: 250px;">
+                <h3 style="color: var(--success);">Kekuatan Utama</h3>
+                ${generateListHTML(data.strengths)}
+            </div>
+            <div style="flex: 1; min-width: 250px;">
+                <h3 style="color: #EF4444;">Area Pengembangan</h3>
+                ${generateListHTML(data.areas)}
+            </div>
+        </div>
+
+        <div class="result-section">
+            <h3>Rekomendasi Kehidupan Praktis</h3>
+            <ol>
+                <li><strong>Karier:</strong> ${data.rec.career}</li>
+                <li><strong>Pendidikan:</strong> ${data.rec.edu}</li>
+                <li><strong>Hubungan:</strong> ${data.rec.rel}</li>
+                <li><strong>Kehidupan Sosial:</strong> ${data.rec.social}</li>
+                <li><strong>Keputusan:</strong> ${data.rec.decisions}</li>
+                <li><strong>Emosi & Stres:</strong> ${data.rec.emotions}</li>
+                <li><strong>Pengembangan Diri:</strong> ${data.rec.selfdev}</li>
+                <li><strong>Tujuan Hidup:</strong> ${data.rec.goals}</li>
+            </ol>
+        </div>
+
+        <div class="result-section" style="background: #EEF2FF;">
+            <h3>Rencana Aksi Personal (30 Hari ke Depan)</h3>
+            <div style="display: grid; gap: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <strong>Minggu 1: Observasi Pola</strong><br>
+                    Catat di jurnal kapan sifat utama kepribadian Anda sangat membantu, dan kapan hal itu justru menjadi penghambat interaksi Anda.
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <strong>Minggu 2: Latih Kekuatan</strong><br>
+                    Gunakan saran pengembangan di bagian 'Kekuatan Utama' untuk menyelesaikan satu proyek/tugas yang tertunda di tempat kerja atau rumah.
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <strong>Minggu 3: Keluar Zona Nyaman</strong><br>
+                    Tantang diri Anda untuk mencoba hal yang berlawanan dari kecenderungan Anda (misal: jika Anda 'J', lakukan 1 hari tanpa jadwal sama sekali).
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <strong>Minggu 4: Refleksi dan Evaluasi</strong><br>
+                    Cek kembali rekomendasi kehidupan. Praktikkan satu metode resolusi konflik baru berdasarkan tipe Anda saat menghadapi perbedaan pendapat.
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <h3>Refleksi Pribadi</h3>
+            <p>Tanyakan 5 hal ini pada diri Anda:</p>
+            <ul>
+                <li>Sejauh mana deskripsi ini sesuai dengan perasaan terdalam saya, bukan hanya topeng sosial saya?</li>
+                <li>Kapan kecenderungan "kelemahan" saya sebenarnya muncul untuk melindungi diri saya?</li>
+                <li>Apakah saya menggunakan hasil tes ini sebagai alasan untuk tidak berubah, atau sebagai alat untuk berkembang?</li>
+                <li>Siapa di lingkungan saya yang memiliki tipe berlawanan yang bisa saya pelajari kelebihannya?</li>
+                <li>Langkah terkecil apa yang bisa saya ambil hari ini dari panduan aksi di atas?</li>
+            </ul>
+            <p style="font-size: 14px; margin-top: 15px; font-style: italic;">
+                <strong>Penafian:</strong> MBTI adalah instrumen refleksi untuk membantu pemahaman diri, bukan diagnosis psikologis medis. Manusia lebih kompleks dari sekadar empat huruf.
+            </p>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    resultScreen.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+</script>
+</body>
+</html>
